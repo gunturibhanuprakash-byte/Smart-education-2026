@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ analytics.student.full_name }} — Detailed Performance{% endblock %}
+{% block header_title %}Student Diagnostic File{% endblock %}
+
+{% block content %}
+<!-- Student Profile Banner -->
+<div class="card" style="margin-bottom: 24px; border-left: 6px solid {% if analytics.overall_percentage >= 75 %}var(--success){% elif analytics.overall_percentage >= 60 %}var(--info){% elif analytics.overall_percentage >= 40 %}var(--warning){% else %}var(--danger){% endif %};">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="badge badge-primary">{{ analytics.student.student_code }}</span>
+        <span class="badge badge-{{ analytics.band_badge }}">{{ analytics.performance_band }}</span>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800;">{{ analytics.student.full_name }}</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        {{ analytics.student.email }} &bull; {{ analytics.student.branch }} ({{ analytics.student.semester }})
+      </p>
+    </div>
+
+    <div style="text-align: right;">
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--primary);">{{ analytics.overall_percentage }}%</div>
+      <div style="font-size: 0.82rem; color: var(--text-muted);">Overall Score</div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="grid-4">
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+      <i class="fas fa-tasks"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.total_questions_solved }}</h3>
+      <p>Questions Answered</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.avg_quiz_score }}%</h3>
+      <p>Average Quiz Accuracy</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+      <i class="fas fa-fire"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.student.learning_streak }} Days</h3>
+      <p>Active Learning Streak</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="kpi-details">
+      <h3 style="color: var(--danger);">{{ analytics.weak_topics|length }}</h3>
+      <p>Identified Weak Topics</p>
+    </div>
+  </div>
+</div>
+
+<!-- Strengths vs Weaknesses Breakdown -->
+<div class="grid-2">
+  <!-- Strong Topics -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" style="color: var(--success);">
+        <i class="fas fa-check-circle"></i> Verified Strong Topics
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for top in analytics.strong_topics %}
+        <div class="topic-item" style="border-left: 4px solid var(--success);">
+          <span class="topic-name">{{ top.topic_name }} ({{ top.subject_name }})</span>
+          <span class="badge badge-success">{{ top.mastery_percentage }}%</span>
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.85rem;">No topics classified as Strong yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Weak Topics Requiring Intervention -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" style="color: var(--danger);">
+        <i class="fas fa-exclamation-circle"></i> Weak Topics Requiring Teacher Support
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for top in analytics.weak_topics %}
+        <div class="topic-item" style="border-left: 4px solid var(--danger);">
+          <span class="topic-name">{{ top.topic_name }} ({{ top.subject_name }})</span>
+          <span class="badge badge-danger">{{ top.mastery_percentage }}%</span>
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Student has no weak topics requiring intervention.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Subject Marks Detail -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-book" style="color: var(--primary);"></i> Subject Marks Record
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Internal Assessment</th>
+          <th>Quiz Marks</th>
+          <th>Assignments</th>
+          <th>Total Score</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sm in analytics.subject_marks %}
+          <tr>
+            <td><strong>{{ sm.subject_name }}</strong> ({{ sm.subject_code }})</td>
+            <td>{{ sm.internal_marks }}</td>
+            <td>{{ sm.quiz_marks }}</td>
+            <td>{{ sm.assignment_marks }}</td>
+            <td><strong>{{ sm.internal_marks + sm.quiz_marks + sm.assignment_marks }}</strong> / {{ sm.max_marks }}</td>
+            <td><span class="badge badge-primary">{{ sm.grade }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}My Marks & Grades — Smart Education{% endblock %}
+{% block header_title %}Academic Gradebook{% endblock %}
+
+{% block content %}
+<!-- Overall Grade Summary Banner -->
+<div class="card" style="margin-bottom: 28px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border: none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+    <div>
+      <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: #fff; margin-bottom: 8px;">
+        Cumulative Evaluation
+      </span>
+      <h2 style="font-size: 1.8rem; font-weight: 800;">Academic Performance Summary</h2>
+      <p style="color: #94a3b8; font-size: 0.92rem; margin-top: 4px;">
+        Continuous assessment aggregating Internal Examinations, Adaptive Quizzes, and Subject Assignments.
+      </p>
+    </div>
+    <div style="text-align: right; background: rgba(255, 255, 255, 0.08); padding: 16px 24px; border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.1);">
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent);">{{ overall_pct }}%</div>
+      <div style="font-size: 0.85rem; color: #cbd5e1;">Aggregate Total: {{ total_obtained }}/{{ total_max }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marks Breakdown Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-award" style="color: var(--primary);"></i> Subject Marks & Component Breakdown
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Internal Assessment (30)</th>
+          <th>Quiz Performance (30)</th>
+          <th>Assignments (40)</th>
+          <th>Total (100)</th>
+          <th>Percentage</th>
+          <th>Letter Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in marks %}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ m.color_theme }};"></div>
+                <div>
+                  <strong>{{ m.subject_name }}</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ m.subject_code }}</div>
+                </div>
+              </div>
+            </td>
+            <td><strong>{{ m.internal_marks }}</strong> / 30</td>
+            <td><strong>{{ m.quiz_marks }}</strong> / 30</td>
+            <td><strong>{{ m.assignment_marks }}</strong> / 40</td>
+            <td>
+              <strong style="font-size: 1rem; color: var(--primary);">{{ m.total_marks }}</strong> / {{ m.max_marks }}
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>{{ m.percentage }}%</span>
+                <div class="progress-bar-container" style="width: 60px; height: 6px; margin: 0;">
+                  <div class="progress-bar-fill" style="width: {{ m.percentage }}%; background-color: {{ m.color_theme }};"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if m.grade in ['A+', 'A'] %}
+                <span class="badge badge-success" style="font-size: 0.85rem; padding: 4px 10px;">{{ m.grade }}</span>
+              {% elif m.grade in ['B+', 'B'] %}
+                <span class="badge badge-primary" style="font-size: 0.85rem; padding: 4px 10px;">{{ m.grade }}</span>
+              {% elif m.grade == 'C' %}
+                <span class="badge badge-warning" style="font-size: 0.85rem; padding: 4px 10px;">{{ m.grade }}</span>
+              {% else %}
+                <span class="badge badge-danger" style="font-size: 0.85rem; padding: 4px 10px;">{{ m.grade }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No marks recorded yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

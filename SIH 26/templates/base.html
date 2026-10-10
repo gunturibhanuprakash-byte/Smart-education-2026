@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Smart Education — Personalized Learning Platform{% endblock %}</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Core Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  {% block extra_css %}{% endblock %}sdr
+ 
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Sidebar Navigation -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo"><i class="fas fa-graduation-cap"></i></div>
+      <div class="brand-name">Smart<span>Edu</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if is_student %}
+        <div class="nav-section-title" data-i18n="learning">Learning Hub</div>
+        <a href="{{ url_for('student.dashboard') }}" class="nav-item {% if request.path == url_for('student.dashboard') %}active{% endif %}">
+          <i class="fas fa-th-large"></i> <span data-i18n="dashboard">Dashboard</span>
+        </a>
+        <a href="{{ url_for('student.subjects') }}" class="nav-item {% if '/student/subject' in request.path %}active{% endif %}">
+          <i class="fas fa-book-open"></i> <span data-i18n="subjects">Subjects</span>
+        </a>
+        <a href="{{ url_for('student.marks') }}" class="nav-item {% if request.path == url_for('student.marks') %}active{% endif %}">
+          <i class="fas fa-award"></i> <span data-i18n="myMarks">My Marks</span>
+        </a>
+        <a href="{{ url_for('student.performance') }}" class="nav-item {% if request.path == url_for('student.performance') %}active{% endif %}">
+          <i class="fas fa-chart-line"></i> <span data-i18n="performance">Performance</span>
+        </a>
+        <a href="{{ url_for('student.learning') }}" class="nav-item {% if request.path == url_for('student.learning') %}active{% endif %}">
+          <i class="fas fa-book-reader"></i> <span data-i18n="learning">Learning Materials</span>
+        </a>
+        <a href="{{ url_for('quiz.start') }}" class="nav-item {% if '/quiz' in request.path %}active{% endif %}">
+          <i class="fas fa-bolt"></i> <span data-i18n="quizzes">Adaptive Quizzes</span>
+        </a>
+        <a href="{{ url_for('student.ai_tutor') }}" class="nav-item {% if request.path == url_for('student.ai_tutor') %}active{% endif %}">
+          <i class="fas fa-robot"></i> <span data-i18n="aiTutor">AI Tutor</span>
+        </a>
+      {% elif is_teacher %}
+        <div class="nav-section-title" data-i18n="teacherDashboard">Teacher Portal</div>
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item {% if request.path == url_for('teacher.dashboard') %}active{% endif %}">
+          <i class="fas fa-chart-pie"></i> <span data-i18n="dashboard">Class Overview</span>
+        </a>
+        <a href="{{ url_for('teacher.students') }}" class="nav-item {% if '/teacher/student' in request.path %}active{% endif %}">
+          <i class="fas fa-user-graduate"></i> <span data-i18n="totalStudents">Students Roster</span>
+        </a>
+        <a href="{{ url_for('teacher.questions') }}" class="nav-item {% if request.path == url_for('teacher.questions') %}active{% endif %}">
+          <i class="fas fa-question-circle"></i> <span data-i18n="questionsBank">Question Bank</span>
+        </a>
+        <a href="{{ url_for('teacher.materials') }}" class="nav-item {% if request.path == url_for('teacher.materials') %}active{% endif %}">
+          <i class="fas fa-folder-open"></i> <span data-i18n="learningMaterials">Course Materials</span>
+        </a>
+        <a href="{{ url_for('teacher.marks_manage') }}" class="nav-item {% if request.path == url_for('teacher.marks_manage') %}active{% endif %}">
+          <i class="fas fa-edit"></i> <span>Marks Management</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-profile-summary">
+        <div class="user-avatar">
+          {{ current_user.full_name[0] if current_user.full_name else 'U' }}
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ current_user.full_name or 'User' }}</div>
+          <div class="user-role-badge">{{ current_user.role }}</div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" title="Logout" style="color: #94a3b8;">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="app-main">
+    <!-- Topbar Header -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+        <h1 class="page-title">{% block header_title %}Dashboard{% endblock %}</h1>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Low-connectivity / Online Status Pill -->
+        <div id="connectionStatus" class="connection-status">
+          <span class="status-dot"></span>
+          <span id="connectionText" data-i18n="online">ONLINE</span>
+        </div>
+
+        <!-- Language Selector -->
+        <div class="lang-selector">
+          <select id="languageSelect" aria-label="Select Language">
+            <option value="en">English (EN)</option>
+            <option value="te">తెలుగు (Telugu)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+          </select>
+        </div>
+
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-power-off"></i> <span data-i18n="logout">Logout</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="content-wrapper">
+      <!-- Flash Alert Container -->
+      <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="alert-close">&times;</button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<!-- Core Scripts -->
+<script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/offline.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

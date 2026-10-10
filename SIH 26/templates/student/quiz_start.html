@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Start Adaptive Quiz — Smart Education{% endblock %}
+{% block header_title %}Adaptive Quiz Engine{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <!-- Informational Banner explaining Adaptive Difficulty -->
+  <div class="card" style="margin-bottom: 28px; background: linear-gradient(135deg, #1e1b4b, #312e81); color: #fff; border: none;">
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+      <div style="width: 50px; height: 50px; border-radius: var(--radius-lg); background: var(--accent); color: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+        <i class="fas fa-bolt"></i>
+      </div>
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">How Adaptive Quizzes Work</h2>
+        <p style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">
+          Our AI-driven quiz dynamically tunes question difficulty based on your live accuracy:
+        </p>
+        <div style="display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap;">
+          <div style="background: rgba(255, 255, 255, 0.1); padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.82rem;">
+            🟢 <strong>Initial:</strong> Starts at <em>Easy</em> level
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.1); padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.82rem;">
+            📈 <strong>Consecutive Correct:</strong> Upgrades to <em>Medium &rarr; Hard</em>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.1); padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.82rem;">
+            📉 <strong>Consecutive Incorrect:</strong> Automatically simplifies to build basics
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Configuration Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-sliders-h" style="color: var(--primary);"></i> Configure Your Quiz Session
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('quiz.initiate') }}">
+      <div class="form-group">
+        <label class="form-label">Select Subject *</label>
+        <select name="subject_id" id="subjectSelector" class="form-control" required>
+          <option value="">-- Choose Subject --</option>
+          {% for sub in subjects %}
+            <option value="{{ sub.id }}" {% if pre_sub == sub.id|string %}selected{% endif %}>{{ sub.name }} ({{ sub.code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Target Topic (Optional - Practice Specific Weak Area)</label>
+        <select name="topic_id" id="topicSelector" class="form-control">
+          <option value="">All Topics in Subject (Full Test)</option>
+          {% for top in topics %}
+            <option value="{{ top.id }}" data-subject="{{ top.subject_id }}" {% if pre_topic == top.id|string %}selected{% endif %}>
+              {{ top.subject_name }} &rarr; {{ top.name }} (Mastery: {{ top.mastery_percentage }}%)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-top: 28px;">
+        <button type="submit" class="btn btn-primary btn-lg btn-full" style="font-size: 1.05rem;">
+          <i class="fas fa-play"></i> Launch Adaptive Quiz Session
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const subSelect = document.getElementById('subjectSelector');
+  const topSelect = document.getElementById('topicSelector');
+
+  function filterTopics() {
+    const selectedSub = subSelect.value;
+    const options = topSelect.querySelectorAll('option');
+
+    options.forEach(opt => {
+      if (!opt.value) {
+        opt.style.display = 'block';
+        return;
+      }
+      const subId = opt.getAttribute('data-subject');
+      if (!selectedSub || subId === selectedSub) {
+        opt.style.display = 'block';
+      } else {
+        opt.style.display = 'none';
+      }
+    });
+  }
+
+  subSelect.addEventListener('change', filterTopics);
+  filterTopics();
+});
+</script>
+{% endblock %}

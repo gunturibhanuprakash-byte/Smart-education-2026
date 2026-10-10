@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Quiz — Question {{ question.question_num }} of {{ session.total_questions }}{% endblock %}
+{% block header_title %}Adaptive Quiz Active{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <!-- Quiz Top Bar -->
+  <div class="quiz-header">
+    <div>
+      <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+        {{ subject.name if subject else 'Subject' }} {% if topic %}&bull; {{ topic.name }}{% endif %}
+      </span>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">
+        Question {{ question.question_num }} of {{ session.total_questions }}
+      </h3>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <!-- Dynamic Difficulty Badge -->
+      <div id="currentDiffBadge" class="difficulty-badge difficulty-{{ question.difficulty }}">
+        <i class="fas fa-bolt"></i> Difficulty: {{ question.difficulty|upper }}
+      </div>
+
+      <!-- Live Timer -->
+      <div style="background-color: #f1f5f9; padding: 6px 14px; border-radius: var(--radius-full); font-weight: 700; font-size: 0.9rem; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-stopwatch" style="color: var(--primary);"></i>
+        <span id="quizTimer">00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question & Options Card -->
+  <div class="quiz-card">
+    <div class="question-text">
+      {{ question.question_text }}
+    </div>
+
+    <!-- 4 Option Tiles -->
+    <div class="options-grid">
+      <div class="option-tile" data-option="A">
+        <div class="option-badge">A</div>
+        <div class="option-text">{{ question.option_a }}</div>
+      </div>
+
+      <div class="option-tile" data-option="B">
+        <div class="option-badge">B</div>
+        <div class="option-text">{{ question.option_b }}</div>
+      </div>
+
+      <div class="option-tile" data-option="C">
+        <div class="option-badge">C</div>
+        <div class="option-text">{{ question.option_c }}</div>
+      </div>
+
+      <div class="option-tile" data-option="D">
+        <div class="option-badge">D</div>
+        <div class="option-text">{{ question.option_d }}</div>
+      </div>
+    </div>
+
+    <!-- Instant Explanation Feedback Drawer -->
+    <div id="feedbackBox" class="feedback-box">
+      <div id="feedbackTitle" class="feedback-title"></div>
+      <div id="feedbackExplanation" class="feedback-explanation"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+      <button type="button" id="btnSubmitAnswer" class="btn btn-primary btn-lg" onclick="submitCurrentAnswer()" disabled>
+        <i class="fas fa-check"></i> <span data-i18n="submitAnswer">Submit Answer</span>
+      </button>
+
+      <button type="button" id="btnNextQuestion" class="btn btn-primary btn-lg" style="display: none;" onclick="proceedToNextQuestion()">
+        <span data-i18n="nextQuestion">Next Question</span> <i class="fas fa-arrow-right"></i>
+      </button>
+
+      <button type="button" id="btnFinishQuiz" class="btn btn-success btn-lg" style="display: none;" onclick="finishQuizAttempt()">
+        <i class="fas fa-flag-checkered"></i> <span data-i18n="finishQuiz">View Results & Scorecard</span>
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/adaptive_quiz.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initQuiz({{ question.id }});
+});
+</script>
+{% endblock %}

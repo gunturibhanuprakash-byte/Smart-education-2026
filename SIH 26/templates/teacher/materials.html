@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Learning Materials Management — Smart Education{% endblock %}
+{% block header_title %}Course Learning Resources{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Manage curriculum notes, tutorial videos, step-by-step code walkthroughs, and practice sets.
+    </p>
+    <button type="button" class="btn btn-primary" onclick="openModal('addMaterialModal')">
+      <i class="fas fa-plus"></i> <span data-i18n="addMaterial">Add New Material</span>
+    </button>
+  </div>
+</div>
+
+<!-- Materials Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-folder-open" style="color: var(--primary);"></i> Published Learning Resources ({{ materials|length }})
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Subject & Topic</th>
+          <th>Resource Type</th>
+          <th>Target Difficulty</th>
+          <th>External Link</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in materials %}
+          <tr>
+            <td>
+              <strong>{{ m.title }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ m.description or m.content[:60] ~ '...' }}</div>
+            </td>
+            <td>
+              <strong>{{ m.subject_name }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ m.topic_name }}</div>
+            </td>
+            <td><span class="badge badge-primary">{{ m.resource_type|capitalize }}</span></td>
+            <td><span class="badge badge-info">{{ m.difficulty|capitalize }}</span></td>
+            <td>
+              {% if m.link_url and m.link_url != '#' %}
+                <a href="{{ m.link_url }}" target="_blank" class="btn btn-secondary btn-sm">
+                  <i class="fas fa-external-link-alt"></i> Open
+                </a>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Text Material</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('teacher.delete_material', material_id=m.id) }}" onsubmit="return confirm('Delete this learning material?');">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No learning materials found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Material Modal -->
+<div id="addMaterialModal" class="modal-backdrop">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('teacher.materials') }}">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Add New Learning Resource</h3>
+        <button type="button" class="alert-close" onclick="closeModal('addMaterialModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Material Title *</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. Master Pointer Arithmetic in C" required>
+        </div>
+
+        <div class="grid-equal" style="margin-bottom: 0;">
+          <div class="form-group">
+            <label class="form-label">Subject *</label>
+            <select name="subject_id" class="form-control" required>
+              {% for s in subjects %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Topic *</label>
+            <select name="topic_id" class="form-control" required>
+              {% for t in topics %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-equal" style="margin-bottom: 0;">
+          <div class="form-group">
+            <label class="form-label">Resource Type *</label>
+            <select name="resource_type" class="form-control" required>
+              <option value="notes">Notes / Article</option>
+              <option value="video">Video Lesson</option>
+              <option value="example">Step-by-Step Example</option>
+              <option value="exercise">Practice Exercise</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Difficulty Tier *</label>
+            <select name="difficulty" class="form-control" required>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate" selected>Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Summary / Description</label>
+          <input type="text" name="description" class="form-control" placeholder="Brief summary for recommendation engine...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Content / Lesson Text</label>
+          <textarea name="content" class="form-control" placeholder="Full explanation, markdown notes, or code snippet..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">External Video / Document Link URL</label>
+          <input type="url" name="link_url" class="form-control" placeholder="https://youtube.com/watch?v=...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addMaterialModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Publish Resource</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

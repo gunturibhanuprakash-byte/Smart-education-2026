@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Education — Login Portal</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <h2 style="font-weight: 800; font-size: 1.6rem; color: #0f172a; margin-bottom: 6px;">Smart Education</h2>
+      <p style="color: #64748b; font-size: 0.9rem;">Personalized Adaptive Learning Platform</p>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" style="margin-bottom: 18px; padding: 10px 14px; font-size: 0.85rem;">
+            <span>{{ message }}</span>
+            <button class="alert-close">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{% if is_register %}{{ url_for('auth.register') }}{% else %}{{ url_for('auth.login') }}{% endif %}">
+      {% if is_register %}
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" name="email" class="form-control" placeholder="rahul@example.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Role</label>
+          <select name="role" class="form-control">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Username or Email</label>
+        <input type="text" name="username" class="form-control" placeholder="student1 or teacher1" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+        {% if is_register %}
+          <i class="fas fa-user-plus"></i> Create Account
+        {% else %}
+          <i class="fas fa-sign-in-alt"></i> Sign In to Platform
+        {% endif %}
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: #64748b;">
+      {% if is_register %}
+        Already have an account? <a href="{{ url_for('auth.login') }}" style="font-weight: 600;">Sign In</a>
+      {% else %}
+        Don't have an account? <a href="{{ url_for('auth.register') }}" style="font-weight: 600;">Register here</a>
+      {% endif %}
+    </div>
+
+    <!-- Quick Hackathon / Demo Fillers -->
+    <div class="demo-presets">
+      <div class="demo-title">⚡ Instant Hackathon Demo Logins</div>
+      <div class="demo-btn-group">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('student')" title="Fill Student Credentials">
+          <i class="fas fa-user-graduate"></i> Student (Rahul)
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('teacher')" title="Fill Teacher Credentials">
+          <i class="fas fa-chalkboard-teacher"></i> Teacher (Arvind)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

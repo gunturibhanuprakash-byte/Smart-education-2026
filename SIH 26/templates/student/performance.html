@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Performance Analytics — Smart Education{% endblock %}
+{% block header_title %}Performance & Mastery Analytics{% endblock %}
+
+{% block content %}
+<!-- Mastery Band Legend Card -->
+<div class="card" style="margin-bottom: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">
+      <i class="fas fa-layer-group"></i> Mastery Classification Standard:
+    </span>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <span class="badge badge-danger">0–39%: Very Weak</span>
+      <span class="badge badge-warning">40–59%: Needs Improvement</span>
+      <span class="badge badge-info">60–74%: Average</span>
+      <span class="badge badge-primary">75–89%: Good</span>
+      <span class="badge badge-success">90–100%: Excellent</span>
+    </div>
+  </div>
+</div>
+
+<!-- Performance Analytics Charts & Insights -->
+<div class="grid-2">
+  <!-- Topic Mastery Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-chart-line" style="color: var(--primary);"></i> Mastery Spectrum Across Topics
+      </div>
+    </div>
+    <div style="height: 340px; position: relative;">
+      <canvas id="performanceMasteryBarChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Strong & Weak Topics Summary -->
+  <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-diagnoses"></i> Diagnostic Assessment
+        </div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--success); margin-bottom: 10px;">
+          <i class="fas fa-check-circle"></i> Dominant Strengths
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for topic in analytics.strong_topics[:3] %}
+            <div class="topic-item" style="border-left: 4px solid var(--success);">
+              <span class="topic-name">{{ topic.topic_name }} ({{ topic.subject_name }})</span>
+              <span class="badge badge-success">{{ topic.mastery_percentage }}%</span>
+            </div>
+          {% else %}
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Solve more quizzes to discover your strengths.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--danger); margin-bottom: 10px;">
+          <i class="fas fa-exclamation-circle"></i> High Priority Weak Topics
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for topic in analytics.weak_topics[:3] %}
+            <div class="topic-item" style="border-left: 4px solid var(--danger);">
+              <div>
+                <div class="topic-name">{{ topic.topic_name }} ({{ topic.subject_name }})</div>
+                <div style="font-size: 0.75rem; color: var(--danger);">Mastery: {{ topic.mastery_percentage }}%</div>
+              </div>
+              <a href="{{ url_for('quiz.start', topic_id=topic.topic_id) }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-bolt"></i> Boost Now
+              </a>
+            </div>
+          {% else %}
+            <p style="font-size: 0.85rem; color: var(--text-muted);">No weak topics identified! You are excelling.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Masteries Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-table"></i> Complete Curriculum Topic Analysis
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>Subject</th>
+          <th>Questions Attempted</th>
+          <th>Correct Answers</th>
+          <th>Mastery Level</th>
+          <th>Classification</th>
+          <th>Recommended Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for top in analytics.topic_masteries %}
+          <tr>
+            <td><strong>{{ top.topic_name }}</strong></td>
+            <td>{{ top.subject_name }}</td>
+            <td>{{ top.total_attempted }}</td>
+            <td>{{ top.total_correct }}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: 700; width: 45px;">{{ top.mastery_percentage }}%</span>
+                <div class="progress-bar-container" style="width: 100px; height: 8px; margin: 0;">
+                  <div class="progress-bar-fill" style="width: {{ top.mastery_percentage }}%; background-color: {% if top.mastery_percentage >= 75 %}var(--success){% elif top.mastery_percentage >= 60 %}var(--info){% elif top.mastery_percentage >= 40 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if top.mastery_percentage >= 90 %}
+                <span class="badge badge-success">{{ top.status_band }}</span>
+              {% elif top.mastery_percentage >= 75 %}
+                <span class="badge badge-primary">{{ top.status_band }}</span>
+              {% elif top.mastery_percentage >= 60 %}
+                <span class="badge badge-info">{{ top.status_band }}</span>
+              {% elif top.mastery_percentage >= 40 %}
+                <span class="badge badge-warning">{{ top.status_band }}</span>
+              {% else %}
+                <span class="badge badge-danger">{{ top.status_band }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('quiz.start', topic_id=top.topic_id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-bolt"></i> Adaptive Quiz
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const labels = [
+    {% for top in analytics.topic_masteries[:8] %}
+      "{{ top.topic_name }}",
+    {% endfor %}
+  ];
+
+  const data = [
+    {% for top in analytics.topic_masteries[:8] %}
+      {{ top.mastery_percentage }},
+    {% endfor %}
+  ];
+
+  const colors = data.map(val => {
+    if (val >= 75) return '#10b981';
+    if (val >= 60) return '#0ea5e9';
+    if (val >= 40) return '#f59e0b';
+    return '#ef4444';
+  });
+
+  if (labels.length > 0) {
+    EduCharts.renderBarChart('performanceMasteryBarChart', labels, data, colors);
+  }
+});
+</script>
+{% endblock %}

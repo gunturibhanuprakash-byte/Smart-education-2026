@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Students Roster — Smart Education{% endblock %}
+{% block header_title %}Enrolled Students Roster{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-user-graduate" style="color: var(--primary);"></i> Class Directory & Performance Status
+    </div>
+    <span class="badge badge-primary">{{ students|length }} Students</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Student Code</th>
+          <th>Full Name</th>
+          <th>Email Address</th>
+          <th>Branch & Semester</th>
+          <th>Quizzes Taken</th>
+          <th>Average Marks</th>
+          <th>Mastery Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+          <tr>
+            <td><strong>{{ s.student_code }}</strong></td>
+            <td>
+              <div style="font-weight: 600;">{{ s.full_name }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">@{{ s.username }}</div>
+            </td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.branch }} &bull; {{ s.semester }}</td>
+            <td>{{ s.quiz_count }}</td>
+            <td>
+              <strong style="font-size: 0.95rem;">{{ s.avg_marks or 0 }}%</strong>
+            </td>
+            <td>
+              <span class="badge badge-{{ s.band_badge }}">{{ s.performance_band }}</span>
+            </td>
+            <td>
+              <a href="{{ url_for('teacher.student_detail', student_id=s.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-chart-line"></i> View Analysis
+              </a>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">No student records found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

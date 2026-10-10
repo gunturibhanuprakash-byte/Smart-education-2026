@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard — Smart Education{% endblock %}
+{% block header_title %}Student Overview{% endblock %}
+
+{% block content %}
+<!-- Welcome & Identity Header -->
+<div class="card" style="margin-bottom: 28px; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #fff; border: none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: #fff; margin-bottom: 8px;">
+        <i class="fas fa-id-card"></i> {{ analytics.student.student_code }} &bull; {{ analytics.student.branch }} ({{ analytics.student.semester }})
+      </span>
+      <h2 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em;">
+        <span data-i18n="welcome">Welcome</span>, {{ analytics.student.full_name }}! 👋
+      </h2>
+      <p style="color: #cbd5e1; font-size: 0.95rem; margin-top: 4px;">
+        Your personalized learning path is active. Review your weak topics and continue your adaptive quizzes today.
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('quiz.start') }}" class="btn btn-primary btn-lg" style="background: var(--accent); color: #0f172a; font-weight: 700; border: none;">
+        <i class="fas fa-bolt"></i> <span data-i18n="takeQuiz">Take Adaptive Quiz</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 4-Column KPI Stats Grid -->
+<div class="grid-4">
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+      <i class="fas fa-chart-pie"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.overall_percentage }}%</h3>
+      <p data-i18n="overallPerformance">Overall Performance</p>
+      <span class="badge badge-{{ analytics.band_badge }}" style="margin-top: 6px;">{{ analytics.performance_band }}</span>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+      <i class="fas fa-fire"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.student.learning_streak }} Days</h3>
+      <p data-i18n="learningStreak">Active Learning Streak</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <i class="fas fa-check-double"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.total_questions_solved }}</h3>
+      <p data-i18n="questionsSolved">Questions Solved</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+      <i class="fas fa-graduation-cap"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ analytics.avg_quiz_score }}%</h3>
+      <p>Average Quiz Score</p>
+    </div>
+  </div>
+</div>
+
+<!-- Middle Section: Performance Chart & Topic Analysis -->
+<div class="grid-2">
+  <!-- Topic Mastery Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-chart-radar"></i> Topic Mastery Radar
+      </div>
+      <span class="badge badge-primary">Dynamic Skill Mapping</span>
+    </div>
+    <div style="height: 320px; position: relative;">
+      <canvas id="topicMasteryChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Strengths & Weaknesses Analysis -->
+  <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-bullseye"></i> Skill Breakdown
+        </div>
+      </div>
+
+      <!-- Strong Topics -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-check-circle"></i> <span data-i18n="strongTopics">Strong Topics</span>
+        </h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          {% for topic in analytics.strong_topics[:4] %}
+            <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 12px;">
+              {{ topic.topic_name }} ({{ topic.mastery_percentage }}%)
+            </span>
+          {% else %}
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Take more quizzes to establish strong topics!</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Needs Improvement -->
+      <div>
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--danger); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-exclamation-triangle"></i> <span data-i18n="needsImprovement">Needs Improvement</span>
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for topic in analytics.weak_topics[:3] %}
+            <div class="topic-item">
+              <div class="topic-info">
+                <span class="topic-name">{{ topic.topic_name }}</span>
+                <span class="topic-meta">{{ topic.subject_name }} &bull; Mastery: {{ topic.mastery_percentage }}%</span>
+              </div>
+              <a href="{{ url_for('quiz.start', topic_id=topic.topic_id) }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-bolt"></i> Practice
+              </a>
+            </div>
+          {% else %}
+            <span style="color: var(--text-muted); font-size: 0.85rem;">No critical weak topics identified. Keep it up!</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Tutor Helper Trigger -->
+    <div style="margin-top: 20px; padding: 14px; background-color: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-robot" style="font-size: 1.4rem; color: var(--primary);"></i>
+        <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">
+          Confused by pointers or recursion?
+        </div>
+      </div>
+      <a href="{{ url_for('student.ai_tutor') }}" class="btn btn-primary btn-sm">
+        <span data-i18n="askAiTutor">Ask AI Tutor</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Subjects Section -->
+<div style="margin-bottom: 28px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+    <h3 style="font-size: 1.25rem; font-weight: 700;" data-i18n="subjects">Your Subjects</h3>
+    <a href="{{ url_for('student.subjects') }}" style="font-size: 0.9rem; font-weight: 600;">View All &rarr;</a>
+  </div>
+
+  <div class="grid-4">
+    {% for sub in subjects %}
+      <div class="card subject-card" style="border-top-color: {{ sub.color_theme }};">
+        <div>
+          <div class="subject-card-top">
+            <div class="subject-icon-box" style="background-color: {{ sub.color_theme }};">
+              <i class="fas {{ sub.icon }}"></i>
+            </div>
+            <span class="badge" style="background: #f1f5f9; color: var(--text-main); font-weight: 700;">
+              Grade: {{ sub.grade }}
+            </span>
+          </div>
+          <h4 class="subject-title">{{ sub.name }}</h4>
+          <p class="subject-desc">{{ sub.description }}</p>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">
+            <span>Score</span>
+            <span>{{ sub.total_marks }}%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: {{ sub.total_marks }}%; background-color: {{ sub.color_theme }};"></div>
+          </div>
+          <div class="subject-card-footer">
+            <span style="font-size: 0.78rem; color: var(--text-muted);">{{ sub.topic_count }} Topics</span>
+            <a href="{{ url_for('student.subject_detail', subject_id=sub.id) }}" class="btn btn-secondary btn-sm">
+              <span data-i18n="viewDetails">Details</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Recommended For You Section -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-lightbulb" style="color: var(--warning);"></i> <span data-i18n="recommendedForYou">Personalized Recommendations For You</span>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    {% for rec in recommendations %}
+      <div class="recommendation-card {{ rec.badge_color }}">
+        <div class="rec-header">
+          <span class="rec-title">{{ rec.topic_name }}</span>
+          <span class="badge badge-{{ rec.badge_color }}">{{ rec.priority }}</span>
+        </div>
+        <p class="rec-action">{{ rec.action_text }}</p>
+        
+        {% if rec.materials %}
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+            <strong>Suggested Resource:</strong> {{ rec.materials[0].title }} ({{ rec.materials[0].resource_type }})
+          </div>
+        {% endif %}
+
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <a href="{{ rec.suggested_quiz_url }}" class="btn btn-primary btn-sm btn-full">
+            <i class="fas fa-bolt"></i> Adaptive Quiz
+          </a>
+          <a href="{{ url_for('student.learning') }}?subject_id={{ rec.subject_id }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-book"></i> Notes
+          </a>
+        </div>
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); padding: 12px;">Great job! No pending recommendations at this time.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Collect radar chart data from server
+  const topicLabels = [
+    {% for topic in analytics.topic_masteries[:7] %}
+      "{{ topic.topic_name }}",
+    {% endfor %}
+  ];
+  
+  const topicData = [
+    {% for topic in analytics.topic_masteries[:7] %}
+      {{ topic.mastery_percentage }},
+    {% endfor %}
+  ];
+
+  if (topicLabels.length > 0) {
+    EduCharts.renderRadarChart('topicMasteryChart', topicLabels, topicData);
+  }
+});
+</script>
+{% endblock %}

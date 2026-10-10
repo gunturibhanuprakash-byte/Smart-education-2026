@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Smart Tutor — Smart Education{% endblock %}
+{% block header_title %}Smart AI Tutor{% endblock %}
+
+{% block content %}
+<div class="ai-tutor-container">
+  <!-- Chat Header with Controls -->
+  <div class="chat-header">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="ai-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div>
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);">Smart AI Learning Companion</h3>
+        <div style="font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 4px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: var(--success); display: inline-block;"></span> Active & Ready to Assist
+        </div>
+      </div>
+    </div>
+
+    <!-- Explanation Level & Topic Filter Controls -->
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <select id="topicFilter" class="form-control" style="width: 160px; padding: 6px 10px; font-size: 0.82rem;">
+        <option value="">All Topics</option>
+        {% for t in topics %}
+          <option value="{{ t.name }}">{{ t.name }}</option>
+        {% endfor %}
+      </select>
+
+      <select id="levelToggle" class="form-control" style="width: 150px; padding: 6px 10px; font-size: 0.82rem; font-weight: 600;">
+        <option value="beginner">🌱 Beginner (Simple Analogies)</option>
+        <option value="advanced">⚡ Advanced (Technical Deep Dive)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Messages History -->
+  <div id="chatMessages" class="chat-messages">
+    <!-- Welcome Greeting Message -->
+    <div class="chat-bubble ai">
+      👋 Hello <strong>{{ current_user.full_name }}</strong>! I am your <strong>Personalized AI Tutor</strong>.
+      <br><br>
+      Whether you are struggling with a tricky concept like <em>Pointers</em>, want simple real-life analogies for <em>Recursion</em>, or need code walkthroughs for <em>Data Structures</em>, ask me anything below!
+    </div>
+  </div>
+
+  <!-- Suggested Prompt Quick Chips -->
+  <div class="suggested-prompts">
+    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); align-self: center; margin-right: 4px;">Suggestions:</span>
+    <button type="button" class="prompt-chip" data-prompt="I don't understand pointers in C. Explain with an analogy.">
+      💡 Pointers Analogy
+    </button>
+    <button type="button" class="prompt-chip" data-prompt="Explain recursion in simple words with a base case example.">
+      🔁 Recursion in Simple Words
+    </button>
+    <button type="button" class="prompt-chip" data-prompt="What is the difference between an Array and a Linked List?">
+      🔗 Arrays vs Linked Lists
+    </button>
+    <button type="button" class="prompt-chip" data-prompt="Explain Binary Search Trees and why they are fast.">
+      🌲 Binary Search Trees
+    </button>
+  </div>
+
+  <!-- Chat Input Field -->
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" class="chat-input" placeholder="Type your doubt or question here (e.g. 'How does pointer arithmetic work?')...">
+    <button type="button" id="btnSendChat" class="btn btn-primary" style="border-radius: var(--radius-full); padding: 0 22px;">
+      <i class="fas fa-paper-plane"></i> Ask AI
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/ai_tutor.js') }}"></script>
+{% endblock %}

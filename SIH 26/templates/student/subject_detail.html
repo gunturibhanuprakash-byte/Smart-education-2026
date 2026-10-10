@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ subject.name }} — Performance & Analytics{% endblock %}
+{% block header_title %}{{ subject.name }} ({{ subject.code }}){% endblock %}
+
+{% block content %}
+<!-- Subject Banner -->
+<div class="card" style="margin-bottom: 28px; border-left: 6px solid {{ subject.color_theme }};">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+        <span class="badge" style="background-color: {{ subject.color_theme }}; color: #fff; font-weight: 700;">
+          {{ subject.code }}
+        </span>
+        <span class="badge badge-primary">Grade: {{ marks.grade if marks else 'N/A' }}</span>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800;">{{ subject.name }}</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 600px;">{{ subject.description }}</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('quiz.start', subject_id=subject.id) }}" class="btn btn-primary btn-lg" style="background-color: {{ subject.color_theme }}; border-color: {{ subject.color_theme }};">
+        <i class="fas fa-bolt"></i> <span data-i18n="takeQuiz">Take Adaptive Quiz</span>
+      </a>
+      <a href="{{ url_for('student.learning') }}?subject_id={{ subject.id }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-book"></i> Notes & Videos
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Performance KPIs for Subject -->
+<div class="grid-4">
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background-color: {{ subject.color_theme }};">
+      <i class="fas fa-calculator"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ marks.internal_marks + marks.quiz_marks + marks.assignment_marks if marks else 0 }}%</h3>
+      <p>Overall Subject Marks</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ quiz_stats.attempts or 0 }}</h3>
+      <p>Quizzes Completed</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+      <i class="fas fa-award"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ quiz_stats.avg_score|round(1) if quiz_stats.avg_score else 0 }}%</h3>
+      <p>Average Quiz Accuracy</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+      <i class="fas fa-layer-group"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ topics|length }}</h3>
+      <p>Curriculum Topics</p>
+    </div>
+  </div>
+</div>
+
+<!-- Topic-wise Performance Chart & List -->
+<div class="grid-2">
+  <!-- Bar Chart of Topics -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-chart-bar" style="color: {{ subject.color_theme }};"></i> Topic Performance Breakdown
+      </div>
+    </div>
+    <div style="height: 320px; position: relative;">
+      <canvas id="subjectTopicChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Detailed Topic List with Action Buttons -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-list-check"></i> Mastery by Topic
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      {% for top in topics %}
+        <div class="topic-item">
+          <div class="topic-info">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="topic-name">{{ top.name }}</span>
+              {% if top.mastery_percentage >= 75 %}
+                <span class="badge badge-success">{{ top.status_band }}</span>
+              {% elif top.mastery_percentage >= 60 %}
+                <span class="badge badge-info">{{ top.status_band }}</span>
+              {% elif top.mastery_percentage >= 40 %}
+                <span class="badge badge-warning">{{ top.status_band }}</span>
+              {% else %}
+                <span class="badge badge-danger">{{ top.status_band }}</span>
+              {% endif %}
+            </div>
+            <span class="topic-meta">Mastery: {{ top.mastery_percentage }}% ({{ top.total_correct }}/{{ top.total_attempted }} solved)</span>
+          </div>
+
+          <a href="{{ url_for('quiz.start', topic_id=top.id) }}" class="btn btn-secondary btn-sm" title="Practice this topic">
+            <i class="fas fa-bolt"></i> Quiz
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Subject Learning Materials -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-book-reader" style="color: var(--primary);"></i> Recommended Learning Materials for {{ subject.name }}
+    </div>
+    <a href="{{ url_for('student.learning') }}?subject_id={{ subject.id }}" class="btn btn-secondary btn-sm">
+      View All Materials &rarr;
+    </a>
+  </div>
+
+  <div class="grid-3">
+    {% for mat in materials %}
+      <div class="card" style="padding: 16px; border-left: 4px solid {{ subject.color_theme }};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <span class="badge badge-primary">{{ mat.resource_type|capitalize }}</span>
+          <span class="badge badge-secondary">{{ mat.difficulty|capitalize }}</span>
+        </div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;">{{ mat.title }}</h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px;">
+          {{ mat.description or mat.content[:80] ~ '...' }}
+        </p>
+        {% if mat.resource_type == 'video' and 'youtube.com' in mat.link_url %}
+          <a href="{{ mat.link_url }}" target="_blank" class="btn btn-primary btn-sm btn-full" style="background-color: #ef4444; border-color: #ef4444;">
+            <i class="fab fa-youtube"></i> Watch Video Lesson
+          </a>
+        {% else %}
+          <a href="{{ url_for('student.learning') }}?subject_id={{ subject.id }}" class="btn btn-secondary btn-sm btn-full">
+            <i class="fas fa-file-alt"></i> Read Lesson Notes
+          </a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); padding: 12px;">No resources added yet for this subject.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const labels = [
+    {% for top in topics %}
+      "{{ top.name }}",
+    {% endfor %}
+  ];
+  
+  const scores = [
+    {% for top in topics %}
+      {{ top.mastery_percentage }},
+    {% endfor %}
+  ];
+
+  if (labels.length > 0) {
+    EduCharts.renderBarChart('subjectTopicChart', labels, scores, '{{ subject.color_theme }}');
+  }
+});
+</script>
+{% endblock %}

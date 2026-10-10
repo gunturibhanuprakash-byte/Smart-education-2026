@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Marks & Gradebook Management — Smart Education{% endblock %}
+{% block header_title %}Student Marks Management{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <!-- Update Marks Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-edit" style="color: var(--primary);"></i> Enter / Update Student Marks
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('teacher.marks_manage') }}">
+      <div class="form-group">
+        <label class="form-label">Select Student *</label>
+        <select name="student_id" class="form-control" required>
+          {% for st in students %}
+            <option value="{{ st.id }}">{{ st.full_name }} ({{ st.student_code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Subject *</label>
+        <select name="subject_id" class="form-control" required>
+          {% for sub in subjects %}
+            <option value="{{ sub.id }}">{{ sub.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Internal Assessment Marks (Max: 30) *</label>
+        <input type="number" step="0.5" min="0" max="30" name="internal_marks" class="form-control" value="24" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Quiz Assessment Marks (Max: 30) *</label>
+        <input type="number" step="0.5" min="0" max="30" name="quiz_marks" class="form-control" value="25" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Assignment Assessment Marks (Max: 40) *</label>
+        <input type="number" step="0.5" min="0" max="40" name="assignment_marks" class="form-control" value="32" required>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button type="submit" class="btn btn-primary btn-lg btn-full">
+          <i class="fas fa-save"></i> Save & Recalculate Grade
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Summary of Grade Calculation Logic -->
+  <div class="card" style="background: #f8fafc;">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-info-circle" style="color: var(--info);"></i> Grading Scale Reference
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem;">
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>90 – 100%</strong></span>
+        <span class="badge badge-success">Grade A+ (Outstanding)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>80 – 89%</strong></span>
+        <span class="badge badge-success">Grade A (Excellent)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>70 – 79%</strong></span>
+        <span class="badge badge-primary">Grade B+ (Good)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>60 – 69%</strong></span>
+        <span class="badge badge-info">Grade B (Average)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>50 – 59%</strong></span>
+        <span class="badge badge-warning">Grade C (Below Average)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fff; border-radius: 6px; border: 1px solid var(--border);">
+        <span><strong>&lt; 50%</strong></span>
+        <span class="badge badge-danger">Grade F (Fail / Remedial Required)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- All Student Marks Roster -->
+<div class="card" style="margin-top: 28px;">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-table"></i> All Student Subject Marks
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Subject</th>
+          <th>Internal (30)</th>
+          <th>Quiz (30)</th>
+          <th>Assignment (40)</th>
+          <th>Total (100)</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in all_marks %}
+          <tr>
+            <td>
+              <strong>{{ m.full_name }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ m.student_code }}</div>
+            </td>
+            <td>{{ m.subject_name }}</td>
+            <td>{{ m.internal_marks }}</td>
+            <td>{{ m.quiz_marks }}</td>
+            <td>{{ m.assignment_marks }}</td>
+            <td><strong>{{ m.total_marks }}</strong> / {{ m.max_marks }}</td>
+            <td><span class="badge badge-primary">{{ m.grade }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

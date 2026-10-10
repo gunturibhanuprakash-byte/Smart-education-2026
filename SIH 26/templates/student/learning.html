@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Learning Materials Hub — Smart Education{% endblock %}
+{% block header_title %}Personalized Learning Materials{% endblock %}
+
+{% block content %}
+<!-- Top Filter Bar -->
+<div class="card" style="margin-bottom: 24px;">
+  <form method="GET" action="{{ url_for('student.learning') }}" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+    <div style="flex: 1; min-width: 200px;">
+      <label class="form-label" style="margin-bottom: 4px;">Filter by Subject</label>
+      <select name="subject_id" class="form-control" onchange="this.form.submit()">
+        <option value="">All Subjects</option>
+        {% for s in subjects %}
+          <option value="{{ s.id }}" {% if current_sub == s.id|string %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 200px;">
+      <label class="form-label" style="margin-bottom: 4px;">Resource Type</label>
+      <select name="type" class="form-control" onchange="this.form.submit()">
+        <option value="">All Types</option>
+        <option value="notes" {% if current_type == 'notes' %}selected{% endif %}>Notes & Articles</option>
+        <option value="video" {% if current_type == 'video' %}selected{% endif %}>Video Lessons</option>
+        <option value="example" {% if current_type == 'example' %}selected{% endif %}>Step-by-Step Examples</option>
+        <option value="exercise" {% if current_type == 'exercise' %}selected{% endif %}>Practice Exercises</option>
+      </select>
+    </div>
+
+    <div style="margin-top: 22px;">
+      <a href="{{ url_for('student.learning') }}" class="btn btn-secondary">
+        <i class="fas fa-undo"></i> Reset Filters
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Recommended For You Alert Banner -->
+{% if recommendations %}
+  <div style="margin-bottom: 24px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+      <i class="fas fa-magic" style="color: var(--primary);"></i> Recommended for Your Weak Topics
+    </h3>
+    <div class="grid-2">
+      {% for rec in recommendations %}
+        <div class="recommendation-card {{ rec.badge_color }}">
+          <div class="rec-header">
+            <span class="rec-title">{{ rec.topic_name }} ({{ rec.subject_name }})</span>
+            <span class="badge badge-{{ rec.badge_color }}">{{ rec.priority }}</span>
+          </div>
+          <p class="rec-action">{{ rec.action_text }}</p>
+          <div style="margin-top: 6px;">
+            <a href="{{ rec.suggested_quiz_url }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-bolt"></i> Practice Adaptive Quiz
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<!-- Learning Materials Grid -->
+<div class="grid-3">
+  {% for mat in materials %}
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary);">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div>
+            <span class="badge" style="background: #f1f5f9; color: var(--text-main); font-weight: 700; margin-right: 4px;">
+              {{ mat.subject_name }}
+            </span>
+            <span class="badge badge-primary">{{ mat.topic_name }}</span>
+          </div>
+          <span class="badge badge-info">{{ mat.difficulty|capitalize }}</span>
+        </div>
+
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main);">
+          {{ mat.title }}
+        </h3>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+          {{ mat.description or mat.content[:100] ~ '...' }}
+        </p>
+      </div>
+
+      <div>
+        {% if mat.resource_type == 'video' and mat.link_url and 'http' in mat.link_url %}
+          <a href="{{ mat.link_url }}" target="_blank" class="btn btn-primary btn-sm btn-full" style="background-color: #ef4444; border-color: #ef4444;">
+            <i class="fab fa-youtube"></i> Watch Video Lesson
+          </a>
+        {% else %}
+          <button type="button" class="btn btn-secondary btn-sm btn-full" onclick="showMaterialModal('{{ mat.title|escape }}', '{{ mat.content|replace('\n', '<br>')|escape }}')">
+            <i class="fas fa-book-open"></i> Read Full Material
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+      <i class="fas fa-folder-open" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+      <h3>No learning materials match your filter</h3>
+      <p style="color: var(--text-muted);">Try selecting a different subject or clearing filters.</p>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Material Reader Modal -->
+<div id="materialModal" class="modal-backdrop">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modalMaterialTitle" style="font-size: 1.15rem; font-weight: 700;"></h3>
+      <button class="alert-close" onclick="closeModal('materialModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="modalMaterialBody" style="line-height: 1.6; font-size: 0.95rem; color: var(--text-main);">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('materialModal')">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showMaterialModal(title, content) {
+  document.getElementById('modalMaterialTitle').innerText = title;
+  document.getElementById('modalMaterialBody').innerHTML = content;
+  openModal('materialModal');
+}
+</script>
+{% endblock %}

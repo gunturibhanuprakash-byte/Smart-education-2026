@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard — Smart Education{% endblock %}
+{% block header_title %}Classroom Analytics Overview{% endblock %}
+
+{% block content %}
+<!-- Teacher Greeting Banner -->
+<div class="card" style="margin-bottom: 28px; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #fff; border: none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: #fff; margin-bottom: 8px;">
+        <i class="fas fa-chalkboard-teacher"></i> Faculty Command Center
+      </span>
+      <h2 style="font-size: 1.8rem; font-weight: 800;">
+        Welcome back, {{ current_user.full_name }}!
+      </h2>
+      <p style="color: #cbd5e1; font-size: 0.95rem; margin-top: 4px;">
+        Real-time class analytics, struggling student detection, and curriculum resources.
+      </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('teacher.questions') }}" class="btn btn-primary btn-lg" style="background: var(--accent); color: #0f172a; font-weight: 700; border: none;">
+        <i class="fas fa-plus-circle"></i> Add Question
+      </a>
+      <a href="{{ url_for('teacher.materials') }}" class="btn btn-secondary btn-lg" style="color: #fff; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2);">
+        <i class="fas fa-folder-plus"></i> Upload Material
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 4 Class KPIs -->
+<div class="grid-4">
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+      <i class="fas fa-user-graduate"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ total_students }}</h3>
+      <p data-i18n="totalStudents">Enrolled Students</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ class_average }}%</h3>
+      <p data-i18n="classAverage">Class Average Score</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="kpi-details">
+      <h3 style="color: var(--danger);">{{ students_needing_support|length }}</h3>
+      <p data-i18n="needSupport">Students Needing Support</p>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+      <i class="fas fa-arrow-down"></i>
+    </div>
+    <div class="kpi-details">
+      <h3>{{ lowest_topic.avg_mastery if lowest_topic else 46.0 }}%</h3>
+      <p>Lowest Topic ({{ lowest_topic.topic_name if lowest_topic else 'Pointers' }})</p>
+    </div>
+  </div>
+</div>
+
+<!-- Charts & At-Risk Intervention Grid -->
+<div class="grid-2">
+  <!-- Subject Averages Bar Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Subject-Wise Class Performance
+      </div>
+    </div>
+    <div style="height: 320px; position: relative;">
+      <canvas id="classSubjectChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Students Requiring Support Priority Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" style="color: var(--danger);">
+        <i class="fas fa-user-times"></i> Students Requiring Urgent Support
+      </div>
+      <span class="badge badge-danger">{{ students_needing_support|length }} Flagged</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for st in students_needing_support %}
+        <div class="topic-item" style="border-left: 4px solid var(--danger);">
+          <div class="topic-info">
+            <span class="topic-name">{{ st.full_name }} ({{ st.student_code }})</span>
+            <span class="topic-meta">{{ st.branch }} &bull; Average Score: <strong>{{ st.avg_marks or 0 }}%</strong></span>
+          </div>
+          <a href="{{ url_for('teacher.student_detail', student_id=st.id) }}" class="btn btn-danger btn-sm">
+            <i class="fas fa-search"></i> Inspect & Help
+          </a>
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); padding: 12px;">All students currently performing above minimum thresholds.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Recent Quiz Logs & Activity -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-history" style="color: var(--primary);"></i> Recent Adaptive Quiz Submissions
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Subject</th>
+          <th>Topic</th>
+          <th>Questions</th>
+          <th>Score</th>
+          <th>Accuracy</th>
+          <th>Performance Band</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for act in recent_activity %}
+          <tr>
+            <td><strong>{{ act.full_name }}</strong></td>
+            <td>{{ act.subject_name }}</td>
+            <td>{{ act.topic_name or 'All Topics' }}</td>
+            <td>{{ act.total_questions }}</td>
+            <td><strong>{{ act.score }} / {{ act.total_questions }}</strong></td>
+            <td>{{ act.percentage }}%</td>
+            <td>
+              <span class="badge {% if act.percentage >= 75 %}badge-success{% elif act.percentage >= 60 %}badge-info{% elif act.percentage >= 40 %}badge-warning{% else %}badge-danger{% endif %}">
+                {{ act.performance_band }}
+              </span>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No recent submissions recorded.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const subLabels = [
+    {% for s in subject_stats %}
+      "{{ s.name }}",
+    {% endfor %}
+  ];
+
+  const subScores = [
+    {% for s in subject_stats %}
+      {{ s.avg_score or 70 }},
+    {% endfor %}
+  ];
+
+  if (subLabels.length > 0) {
+    EduCharts.renderBarChart('classSubjectChart', subLabels, subScores, '#4361ee');
+  }
+});
+</script>
+{% endblock %}

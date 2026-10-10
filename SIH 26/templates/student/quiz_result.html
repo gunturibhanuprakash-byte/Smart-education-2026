@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Results & Scorecard — Smart Education{% endblock %}
+{% block header_title %}Adaptive Quiz Scorecard{% endblock %}
+
+{% block content %}
+<div style="max-width: 850px; margin: 0 auto;">
+  <!-- Result Scorecard Banner -->
+  <div class="card" style="margin-bottom: 28px; text-align: center; padding: 36px 24px; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #fff; border: none;">
+    <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 16px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);">
+      <i class="fas fa-trophy"></i>
+    </div>
+
+    <h2 style="font-size: 2rem; font-weight: 800;">Quiz Completed!</h2>
+    <p style="color: #cbd5e1; font-size: 1rem; margin-top: 4px;">
+      Subject: <strong>{{ attempt.subject_name }}</strong> {% if attempt.topic_name %}&bull; Topic: <strong>{{ attempt.topic_name }}</strong>{% endif %}
+    </p>
+
+    <!-- Score Highlights -->
+    <div style="display: flex; justify-content: center; gap: 32px; margin-top: 24px; flex-wrap: wrap;">
+      <div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);">{{ attempt.score }} / {{ attempt.total_questions }}</div>
+        <div style="font-size: 0.85rem; color: #94a3b8;">Total Score</div>
+      </div>
+      <div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: #10b981;">{{ attempt.percentage }}%</div>
+        <div style="font-size: 0.85rem; color: #94a3b8;">Accuracy</div>
+      </div>
+      <div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin-top: 6px;">{{ attempt.performance_band }}</div>
+        <div style="font-size: 0.85rem; color: #94a3b8;">Mastery Band</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adaptive Difficulty Path Timeline -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-route" style="color: var(--primary);"></i> Your Adaptive Difficulty Progression
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 10px 0;">
+      {% for diff in diff_progression %}
+        <span class="difficulty-badge difficulty-{{ diff }}">
+          Q{{ loop.index }}: {{ diff|upper }}
+        </span>
+        {% if not loop.last %}
+          <i class="fas fa-arrow-right" style="color: var(--text-muted); font-size: 0.85rem;"></i>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Detailed Question Review -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+      <div class="card-title">
+        <i class="fas fa-list-check" style="color: var(--primary);"></i> Detailed Question Review
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      {% for ans in answers %}
+        <div style="padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); background-color: {% if ans.is_correct %}var(--success-light){% else %}var(--danger-light){% endif %};">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <span style="font-weight: 700; font-size: 0.95rem;">
+              Q{{ loop.index }}. {{ ans.question_text }}
+            </span>
+            <span class="badge {% if ans.is_correct %}badge-success{% else %}badge-danger{% endif %}">
+              {% if ans.is_correct %}<i class="fas fa-check"></i> Correct{% else %}<i class="fas fa-times"></i> Incorrect{% endif %}
+            </span>
+          </div>
+
+          <div style="font-size: 0.85rem; margin-bottom: 6px;">
+            Your Answer: <strong>Option {{ ans.student_answer }}</strong> &bull; Correct Answer: <strong>Option {{ ans.correct_option }}</strong>
+          </div>
+
+          <div style="font-size: 0.85rem; color: var(--text-main); background: rgba(255, 255, 255, 0.7); padding: 8px 12px; border-radius: var(--radius-sm);">
+            <strong>Explanation:</strong> {{ ans.explanation }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recommended Next Lesson -->
+  {% if recommendations %}
+    <div class="card" style="border-left: 6px solid var(--primary); margin-bottom: 24px;">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fas fa-forward" style="color: var(--primary);"></i> Recommended Next Steps
+        </div>
+      </div>
+      <div class="recommendation-card {{ recommendations[0].badge_color }}" style="border: none; padding: 0;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">{{ recommendations[0].topic_name }}</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">{{ recommendations[0].action_text }}</p>
+        <div style="display: flex; gap: 10px;">
+          <a href="{{ recommendations[0].suggested_quiz_url }}" class="btn btn-primary">
+            <i class="fas fa-bolt"></i> Practice Topic Quiz
+          </a>
+          <a href="{{ url_for('student.learning') }}?subject_id={{ attempt.subject_id }}" class="btn btn-secondary">
+            <i class="fas fa-book"></i> Read Topic Notes
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Action CTAs -->
+  <div style="display: flex; justify-content: center; gap: 14px;">
+    <a href="{{ url_for('quiz.start') }}" class="btn btn-primary btn-lg">
+      <i class="fas fa-redo"></i> Take Another Quiz
+    </a>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary btn-lg">
+      <i class="fas fa-home"></i> Back to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
